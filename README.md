@@ -1,7 +1,7 @@
 Catmaply - Demo app with shiny <img src="figures/logo.png" align="right" height="192 px"/>
 ======================
 
-This app is used to test the integration of the package [catmaply](https://github.com/yvesmauron/catmaply) with shiny. Additionally, it is used the test interactive ploting possibilities by capturing plotly_event with the `event_data()` function.
+This app is used to test the integration of the package [catmaply](https://github.com/yvesmauron/catmaply) with shiny. Additionally, it is used the test interactive ploting possibilities by capturing plotly events with the `event_data()` function.
 
 ## Disclaimer
 
