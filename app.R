@@ -22,16 +22,11 @@ ui <- dashboardPage(
           "Sample 5" = 5
         ),
         selected = "Sample 1"
-      )#,
-      # menuItem("Sales dashboard",tabName = "dashboard"),
-      # menuSubItem("DevOps",tabName = "DevOps"),
-      # menuSubItem("Blockchain",tabName = "Blockchain"),
-      # menuSubItem("AWS",tabName = "AWS")
+      )
     )
   ),
   dashboardBody(
     useShinyjs(),
-    # Boxes need to be put in a row (or column)
     fluidRow(
       box(
         title = "Heatmap",
@@ -70,11 +65,6 @@ ui <- dashboardPage(
         width = 4
       )
     )
-    
-    # code to reset plotlys event_data("plotly_click", source="A") to NULL -> executed upon action button click
-    # note that "A" needs to be replaced with plotly source string if used
-    # extendShinyjs(text = "shinyjs.resetClick = function() { Shiny.onInputChange('.clientValue-plotly_click-A', 'null'); }"),
-    # actionButton("reset", "Reset plotly click value"),
   )
 )
 
@@ -123,8 +113,7 @@ server <- shinyServer(function(input, output) {
   })
   
   output$heatmap <- renderPlotly({
-    
-    #plot_ly(mtcars, x=~cyl, y=~mpg)
+
     plot <- catmaply(
       main_plot_data(),
       x = fahrt_seq,
@@ -198,10 +187,7 @@ server <- shinyServer(function(input, output) {
       plot_ly(x = ~rnorm(1000) + pd[[z]][1], type = "histogram")
     
   })
-  
-  # observeEvent(input$reset, {
-  #   js$resetClick()
-  # })
+
 })
 
 shinyApp(ui, server)
