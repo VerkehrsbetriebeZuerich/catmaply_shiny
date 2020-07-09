@@ -12,7 +12,7 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       selectInput(
-        inputId = "sample_id", 
+        inputId = "sample_id",
         label = "Sample:",
         choices = c(
           "Sample 1" = 1,
@@ -36,6 +36,7 @@ ui <- dashboardPage(
       ),
       box(
         title = "boxplot",
+        # tags$head(tags$style( type = 'text/css',  '#boxplot{ overflow-x: scroll; }')),
         plotlyOutput("boxplot", height = "700px"),
         width = 4,
         height = "800px"
@@ -64,54 +65,63 @@ ui <- dashboardPage(
         DT::dataTableOutput("raw_data"),
         width = 4
       )
+    ),
+    fluidRow(
+      box(
+        title = "boxplot scroll",
+        # tags$head(tags$style( type = 'text/css',  '#boxplot{ overflow-x: scroll; }')),
+        div(style = 'overflow-x: scroll; width: 100%', plotlyOutput("boxplot_long", height = "700px", width = "10000px")),
+        width = 12,
+        height = "800px"
+      )
     )
   )
 )
 
 server <- shinyServer(function(input, output) {
-  
-  
+
+
   data(vbz)
-  
+
   x <- "fahrt_seq"
   y = "Haltestellenlangname"
   y_order = "halt_seq"
   z = "Besetzung"
-  
+
   id <- reactive({
     as.numeric(input$sample_id)
   })
-  
+
   main_plot_data <- reactive({
     vbz[[id()]]$data
   })
-  
+
   plotly_click_data <- reactive({
     event_data("plotly_click", source = "catmaply")
   })
-  
+
   plotly_relayout_data <- reactive({
     event_data("plotly_relayout", source = "catmaply")
   })
-  
-  
+
+
   sub_plot_data <- reactive({
     data <- plotly_click_data()
-    
+
     if (!is.null(data))
       filter(main_plot_data(), !!rlang::sym(x) == data[["x"]] & !!rlang::sym(y) == data[["y"]])
     else
       main_plot_data()
   })
-  
+
   output$plotly_click_event_data <- renderPrint({
     plotly_click_data()
   })
-  
+
   output$plotly_relayout_event_data <- renderPrint({
     plotly_relayout_data()
   })
-  
+
   output$heatmap <- renderPlotly({
 
     plot <- catmaply(
@@ -123,18 +133,18 @@ server <- shinyServer(function(input, output) {
       categorical_colorbar = T,
       categorical_col = Ausl_Kat
     )
-    
+
     plot
   })
-  
-  
+
+
   output$boxplot <- renderPlotly({
-    
+
     lower <- 0
     upper <- 30
-    
+
     relayout_data <- plotly_relayout_data()
-    
+
     if (!is.null(relayout_data)) {
       if (exists('xaxis.range', where = relayout_data)) {
         lower <- relayout_data$xaxis.range[1]
@@ -147,12 +157,12 @@ server <- shinyServer(function(input, output) {
         upper <- relayout_data$`xaxis.range[1]`
       }
     }
-    
+
     bpd <- dplyr::filter(
-      main_plot_data(), 
+      main_plot_data(),
       dplyr::between(fahrt_seq, lower, upper)
     )
-    
+
     plot_ly() %>%
       add_trace(
         type="box",
@@ -170,22 +180,69 @@ server <- shinyServer(function(input, output) {
           categoryarray=unique(main_plot_data()[[y]][order(main_plot_data()[[y_order]])])
         )
       )
-    
+
   })
-  
-  
+
+
   output$raw_data <- DT::renderDataTable({
     select(sub_plot_data(), x, y, z)
   })
-  
+
   output$hist <- renderPlotly({
     pd <- sub_plot_data()
-    
+
     if (NROW(pd) > 1)
       plot_ly(x = ~pd[[z]], type = "histogram")
     else
       plot_ly(x = ~rnorm(1000) + pd[[z]][1], type = "histogram")
-    
+
+  })
+
+
+  # garbage
+  output$boxplot_long <- renderPlotly({
+
+    lower <- 0
+    upper <- 30
+
+    relayout_data <- plotly_relayout_data()
+
+    if (!is.null(relayout_data)) {
+      if (exists('xaxis.range', where = relayout_data)) {
+        lower <- relayout_data$xaxis.range[1]
+        upper <- relayout_data$xaxis.range[2]
+      } else if (
+        exists('xaxis.range[0]', where = relayout_data) &&
+        exists('xaxis.range[1]', where = relayout_data)
+      ){
+        lower <- relayout_data$`xaxis.range[0]`
+        upper <- relayout_data$`xaxis.range[1]`
+      }
+    }
+
+    bpd <- dplyr::filter(
+      main_plot_data(),
+      dplyr::between(fahrt_seq, lower, upper)
+    )
+
+    plot_ly() %>%
+      add_trace(
+        type="box",
+        data=bpd,
+        y=~Haltestellenlangname,
+        x=~Besetzung,
+        boxpoints = 'suspectedoutliers',
+        notched=TRUE
+      ) %>%
+      plotly::layout(
+        yaxis = list(
+          title="",
+          fixedrange = TRUE,
+          categoryorder="array",
+          categoryarray=unique(main_plot_data()[[y]][order(main_plot_data()[[y_order]])])
+        )
+      )
+
   })
 
 })
