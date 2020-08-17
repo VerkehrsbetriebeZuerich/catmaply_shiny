@@ -83,17 +83,17 @@ server <- shinyServer(function(input, output) {
 
   data(vbz)
 
-  x <- "fahrt_seq"
-  y = "Haltestellenlangname"
-  y_order = "halt_seq"
-  z = "Besetzung"
+  x <- "trip_seq"
+  y = "stop_name"
+  y_order = "stop_seq"
+  z = "occupancy"
 
   id <- reactive({
     as.numeric(input$sample_id)
   })
 
   main_plot_data <- reactive({
-    vbz[[id()]]$data
+    vbz[[id()]]
   })
 
   plotly_click_data <- reactive({
@@ -126,12 +126,12 @@ server <- shinyServer(function(input, output) {
 
     plot <- catmaply(
       main_plot_data(),
-      x = fahrt_seq,
-      y = Haltestellenlangname,
-      y_order = halt_seq,
-      z = Besetzung,
+      x = trip_seq,
+      y = stop_name,
+      y_order = stop_seq,
+      z = occupancy,
       categorical_colorbar = T,
-      categorical_col = Ausl_Kat
+      categorical_col = occ_category
     )
 
     plot
@@ -160,15 +160,15 @@ server <- shinyServer(function(input, output) {
 
     bpd <- dplyr::filter(
       main_plot_data(),
-      dplyr::between(fahrt_seq, lower, upper)
+      dplyr::between(trip_seq, lower, upper)
     )
 
     plot_ly() %>%
       add_trace(
         type="box",
         data=bpd,
-        y=~Haltestellenlangname,
-        x=~Besetzung,
+        y=~stop_name,
+        x=~occupancy,
         boxpoints = 'suspectedoutliers',
         notched=TRUE
       ) %>%
@@ -222,15 +222,15 @@ server <- shinyServer(function(input, output) {
 
     bpd <- dplyr::filter(
       main_plot_data(),
-      dplyr::between(fahrt_seq, lower, upper)
+      dplyr::between(trip_seq, lower, upper)
     )
 
     plot_ly() %>%
       add_trace(
         type="box",
         data=bpd,
-        y=~Haltestellenlangname,
-        x=~Besetzung,
+        y=~stop_name,
+        x=~occupancy,
         boxpoints = 'suspectedoutliers',
         notched=TRUE
       ) %>%
