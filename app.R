@@ -130,7 +130,7 @@ server <- shinyServer(function(input, output) {
       y = stop_name,
       y_order = stop_seq,
       z = occupancy,
-      categorical_colorbar = T,
+      categorical_color_range = T,
       categorical_col = occ_category
     )
 
